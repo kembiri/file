@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Streaming Film</title>
+
+<style>
+:root {
+  --primary-color: #4361ee;
+  --secondary-color: #3f37c9;
+  --accent-color: #4895ef;
+  --dark-color: #1a1a2e;
+  --light-color: #f8f9fa;
+  --text-color: #2b2d42;
+  --text-light: #8d99ae;
+  --success-color: #4cc9f0;
+  --warning-color: #ffc107;
+  --border-radius: 12px;
+  --box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      margin: 0;
+      padding: 10px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: url(https://stream77.netlify.app/bg.png) repeat;
+      color: #333;
+    }
+
+h2 {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 10px;
+  margin: 1px 0;
+  font-size: 1.0rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: transparent;
+  background: linear-gradient(90deg, var(--primary-color), #3a0ca3, #7209b7);
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-color), #3a0ca3, #7209b7);
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+h2:hover::after {
+  transform: scaleX(1);
+}
+
+    .movie-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    
+    .movie-item {
+      position: relative;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      cursor: pointer;
+      transform-style: preserve-3d;
+      will-change: transform, box-shadow;
+    }
+    
+    .movie-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0) 60%, rgba(0,0,0,0.7) 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 1;
+    }
+    
+    .movie-item:hover {
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .movie-item:hover::before {
+      opacity: 1;
+    }
+    
+    .movie-item:active {
+      transform: translateY(0) scale(0.98);
+      transition: transform 0.1s ease-out;
+    }
+    
+    .movie-item:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.5);
+    }
+    
+    .movie-item img {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 2/3;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+    
+    .movie-item:hover img {
+      transform: scale(1.05);
+    }
+    
+    .movie-item div {
+      position: relative;
+      padding: 8px 4px;
+      font-size: 0.7rem;
+      text-align: center;      
+      overflow: hidden;
+      text-overflow: ellipsis;
+      background: white;
+      z-index: 2;
+      transition: all 0.3s ease;
+    }
+    
+    .movie-item:hover div {
+      background: rgba(255, 255, 255, 0.9);
+      font-weight: bold;
+    }
+    
+    .movie-item::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(52, 152, 219, 0);
+      transition: background 0.3s ease;
+      z-index: 1;
+    }
+    
+    .movie-item:hover::after {
+      background: rgba(52, 152, 219, 0.1);
+    }
+    
+    #pagination {
+      margin: 20px 0;
+      text-align: center;
+    }
+    
+    #pagination button {
+      padding: 8px 16px;
+      margin: 0 5px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    #pagination button:disabled {
+      background-color: #95a5a6;
+      cursor: not-allowed;
+    }
+    
+    #pageNumbers span {
+      display: inline-block;
+      padding: 8px 12px;
+      margin: 0 3px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    
+    #pageNumbers span.active {
+      background-color: #3498db;
+      color: white;
+    }
+    
+    @media (min-width: 600px) {
+      .movie-grid {
+        grid-template-columns: repeat(7, 1fr);
+        gap: 12px;
+      }
+      
+      .movie-item div {
+        font-size: 0.8rem;
+        padding: 8px 4px;
+      }
+    }
+    
+    @media (min-width: 900px) {
+      .movie-grid {
+        grid-template-columns: repeat(12, 1fr);
+        gap: 15px;
+      }
+      
+      h2 {
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+      }
+      
+      .movie-item div {
+        font-size: 0.9rem;
+        padding: 10px 5px;
+      }
+    }
+</style>
+</head>
+
+
+<body>
+
+<h2>Daftar Film</h2>
+
+<div class="movie-grid" id="movieGrid"></div>
+
+<div id="pagination">
+<button id="prevBtn">Prev</button>
+<span id="pageNumbers"></span>
+<button id="nextBtn">Next</button>
+</div>
+
+
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+
+const firebaseConfig = {
+
+databaseURL:"https://stream-77-default-rtdb.asia-southeast1.firebasedatabase.app",
+
+};
+
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const filmRef = ref(db,"films");
+
+
+let movies = [];
+let currentPage = 1;
+const perPage = 24;
+
+
+
+function renderMovies(){
+
+const start = (currentPage-1)*perPage;
+const end = start + perPage;
+
+const pageMovies = movies.slice(start,end);
+
+let html="";
+
+pageMovies.forEach(film=>{
+
+html += `
+<a class="movie-item" href="watch.html?slug=${film.slug}">
+
+<img src="${film.poster}" loading="lazy">
+
+<div>${film.title}</div>
+
+</a>
+`;
+
+});
+
+document.getElementById("movieGrid").innerHTML = html;
+
+renderPagination();
+
+}
+
+
+
+function renderPagination(){
+
+const totalPages = Math.ceil(movies.length/perPage);
+
+document.getElementById("prevBtn").disabled = currentPage===1;
+document.getElementById("nextBtn").disabled = currentPage===totalPages;
+
+let pageHtml="";
+
+for(let i=1;i<=totalPages;i++){
+
+pageHtml += `<span class="${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</span>`;
+
+}
+
+document.getElementById("pageNumbers").innerHTML = pageHtml;
+
+}
+
+
+
+window.goPage = function(page){
+
+currentPage = page;
+renderMovies();
+
+}
+
+
+
+document.getElementById("prevBtn").onclick = ()=>{
+
+currentPage--;
+renderMovies();
+
+};
+
+document.getElementById("nextBtn").onclick = ()=>{
+
+currentPage++;
+renderMovies();
+
+};
+
+
+
+onValue(filmRef,(snapshot)=>{
+
+const data = snapshot.val();
+
+movies = [];
+
+for(let id in data){
+
+movies.push(data[id]);
+
+}
+
+renderMovies();
+
+});
+
+
+</script>
+
+
+</body>
+</html>
