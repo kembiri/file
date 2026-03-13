@@ -1,209 +1,171 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Watch Film</title>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch Film</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 15px;
+        font-family: 'Segoe UI', Tahoma;
+        background: url(https://stream77.netlify.app/bg.png) repeat;
+        color: #333;
+      }
 
-<style>
-body{
-margin:0;
-padding:15px;
-font-family:'Segoe UI',Tahoma;
-background:url(https://stream77.netlify.app/bg.png) repeat;
-color:#333;
-}
+      .container {
+        max-width: 1000px;
+        margin: auto;
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+      }
 
-.container{
-max-width:1000px;
-margin:auto;
-background:white;
-padding:15px;
-border-radius:10px;
-box-shadow:0 5px 20px rgba(0,0,0,0.15);
-}
+      /* tombol kembali */
+      .back {
+        display: inline-block;
+        margin-bottom: 10px;
+        color: #4361ee;
+        text-decoration: none;
+        font-weight: bold;
+      }
 
-/* tombol kembali */
-.back{
-display:inline-block;
-margin-bottom:10px;
-color:#4361ee;
-text-decoration:none;
-font-weight:bold;
-}
+      .back:hover {
+        text-decoration: underline;
+      }
 
-.back:hover{
-text-decoration:underline;
-}
+      /* judul film */
+      h1 {
+        font-size: 20px;
+        margin-bottom: 12px;
+        color: #222;
+      }
 
-/* judul film */
-h1{
-font-size:20px;
-margin-bottom:12px;
-color:#222;
-}
+      /* video player */
+      .player {
+        width: 100%;
+        max-width: 820px;
+        aspect-ratio: 16/9;
+        border: none;
+        background: black;
+        display: block;
+        margin: auto;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+      }
 
-/* video player */
-.player{
-width:100%;
-max-width:820px;
-aspect-ratio:16/9;
-border:none;
-background:black;
-display:block;
-margin:auto;
-margin-bottom:20px;
-border-radius:8px;
-box-shadow:0 5px 20px rgba(0,0,0,0.2);
-}
+      /* daftar episode */
+      .episode-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+      }
 
-/* daftar episode */
-.episode-list{
-display:flex;
-flex-wrap:wrap;
-gap:8px;
-justify-content:center;
-}
+      /* tombol episode */
+      .episode-btn {
+        background: #f1f1f1;
+        border: 1px solid #ddd;
+        color: #333;
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: .2s;
+      }
 
-/* tombol episode */
-.episode-btn{
-background:#f1f1f1;
-border:1px solid #ddd;
-color:#333;
-padding:6px 12px;
-border-radius:6px;
-cursor:pointer;
-font-size:13px;
-transition:.2s;
-}
+      /* hover */
+      .episode-btn:hover {
+        background: #4361ee;
+        color: white;
+        border-color: #4361ee;
+      }
 
-/* hover */
-.episode-btn:hover{
-background:#4361ee;
-color:white;
-border-color:#4361ee;
-}
+      /* episode aktif */
+      .episode-btn.active {
+        background: #4361ee;
+        border-color: #4361ee;
+        color: white;
+        font-weight: bold;
+      }
 
-/* episode aktif */
-.episode-btn.active{
-background:#4361ee;
-border-color:#4361ee;
-color:white;
-font-weight:bold;
-}
+      /* mobile */
+      @media(max-width:600px) {
+        .container {
+          padding: 10px;
+        }
 
-/* mobile */
-@media(max-width:600px){
+        .player {
+          max-width: 100%;
+        }
 
-.container{
-padding:10px;
-}
+        h1 {
+          font-size: 16px;
+        }
 
-.player{
-max-width:100%;
-}
+        .episode-btn {
+          font-size: 12px;
+          padding: 5px 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <a href="preview.html" class="back">⬅ Kembali</a>
+      <h1 id="filmTitle">Loading...</h1>
+      <iframe id="player" class="player" allowfullscreen></iframe>
+      <h3>Pilih Episode</h3>
+      <div class="episode-list" id="episodeList"></div>
+    </div>
+    <script type="module">
+      import {
+        initializeApp
+      } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+      import {
+        getDatabase,
+        ref,
+        onValue
+      } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+      const firebaseConfig = {
+        databaseURL: "https://stream-77-default-rtdb.asia-southeast1.firebasedatabase.app",
+      };
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+      const params = new URLSearchParams(location.search);
+      const slug = params.get("slug");
+      const filmRef = ref(db, "films");
 
-h1{
-font-size:16px;
-}
+      function playEpisode(url, index) {
+        document.getElementById("player").src = url;
+        document.querySelectorAll(".episode-btn").forEach(btn => {
+          btn.classList.remove("active");
+        });
+        document.querySelectorAll(".episode-btn")[index].classList.add("active");
+      }
+      onValue(filmRef, (snapshot) => {
+        const data = snapshot.val();
+        for (let id in data) {
+          const film = data[id];
+          if (film.slug === slug) {
+            document.getElementById("filmTitle").innerText = film.title;
+            let html = "";
+            film.episodes.forEach((ep, i) => {
+              html += `
 
-.episode-btn{
-font-size:12px;
-padding:5px 10px;
-}
-
-}
-
-</style>
-
-</head>
-
-<body>
-
-<div class="container">
-
-<a href="preview.html" class="back">⬅ Kembali</a>
-
-<h1 id="filmTitle">Loading...</h1>
-
-<iframe id="player" class="player" allowfullscreen></iframe>
-
-<h3>Pilih Episode</h3>
-
-<div class="episode-list" id="episodeList"></div>
-
-</div>
-
-
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-
-const firebaseConfig = {
-
-databaseURL:"https://stream-77-default-rtdb.asia-southeast1.firebasedatabase.app",
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-const params = new URLSearchParams(location.search);
-const slug = params.get("slug");
-
-const filmRef = ref(db,"films");
-
-function playEpisode(url,index){
-
-document.getElementById("player").src = url;
-
-document.querySelectorAll(".episode-btn").forEach(btn=>{
-btn.classList.remove("active");
-});
-
-document.querySelectorAll(".episode-btn")[index].classList.add("active");
-
-}
-
-onValue(filmRef,(snapshot)=>{
-
-const data = snapshot.val();
-
-for(let id in data){
-
-const film = data[id];
-
-if(film.slug === slug){
-
-document.getElementById("filmTitle").innerText = film.title;
-
-let html="";
-
-film.episodes.forEach((ep,i)=>{
-
-html += `
-<button class="episode-btn" onclick="playEpisode('${ep.url}',${i})">
+					<button class="episode-btn" onclick="playEpisode('${ep.url}',${i})">
 ${ep.label}
 </button>
 `;
-
-});
-
-document.getElementById("episodeList").innerHTML = html;
-
-playEpisode(film.episodes[0].url,0);
-
-}
-
-}
-
-});
-
-
-window.playEpisode = playEpisode;
-
-</script>
-
-</body>
+            });
+            document.getElementById("episodeList").innerHTML = html;
+            playEpisode(film.episodes[0].url, 0);
+          }
+        }
+      });
+      window.playEpisode = playEpisode;
+    </script>
+  </body>
 </html>
